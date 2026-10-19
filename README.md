@@ -12,10 +12,65 @@
 
 <br/>
 
-**Say goodbye to boring chest inventories!**  
-Ultimate UI is the most advanced, all-in-one in-game interface creation framework for modern Minecraft servers. Build custom mouse-driven GUIs, persistent HUD overlays, interactive holographic 3D world displays, and smooth animated transitions directly inside the game.
+<!-- BuiltByBit Resource Showcase Presentation -->
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/UltimateUI.png" alt="UltimateUI" width="1000"/>
+</a>
+<br/>
 
-[BuiltByBit Resource](https://builtbybit.com/resources/ultimate-ui.105345/) • [Documentation](https://xqedii.dev/docs/plugins/ultimate-ui) • [Discord Support](https://discord.gg/)
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/Profile_UI.gif" alt="Profile UI Showcase" width="1000"/>
+</a>
+<br/>
+
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/In-Game_Editor.png" alt="In-Game Editor" width="1000"/>
+</a>
+<br/>
+
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/CursorUI.gif" alt="Cursor-Driven UI" width="1000"/>
+</a>
+<br/>
+
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/Animations.gif" alt="Screen Animations" width="1000"/>
+</a>
+<br/>
+
+<img src="docs/images/Bedrock.png" alt="Bedrock & Geyser Support" width="1000"/>
+<br/>
+
+<img src="docs/images/WorldUIs.gif" alt="3D World UIs" width="1000"/>
+<br/>
+
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/HudDisplay.png" alt="HUD Display Engine" width="1000"/>
+</a>
+<br/>
+
+<a href="https://editor.xqedii.dev/" target="_blank">
+  <img src="docs/images/WebEditor.png" alt="Web Editor Support" width="1000"/>
+</a>
+<br/>
+
+<a href="https://xqedii.dev/docs/plugins/ultimate-ui" target="_blank">
+  <img src="docs/images/docs.png" alt="Comprehensive Documentation" width="1000"/>
+</a>
+<br/>
+
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/Support.gif" alt="Community & Support" width="1000"/>
+</a>
+<br/>
+
+<a href="https://xqedii.dev/dc" target="_blank">
+  <img src="docs/images/UltimateUIFooter.png" alt="Ultimate UI Footer" width="1000"/>
+</a>
+
+<br/><br/>
+
+[BuiltByBit Resource](https://builtbybit.com/resources/ultimate-ui.105345/) • [Documentation](https://xqedii.dev/docs/plugins/ultimate-ui) • [Discord Support](https://xqedii.dev/dc)
 
 ---
 
@@ -136,7 +191,7 @@ target/UltimateUI-1.4.2.jar
 
 * 🛒 **BuiltByBit Resource:** [https://builtbybit.com/resources/ultimate-ui.105345/](https://builtbybit.com/resources/ultimate-ui.105345/)
 * 📖 **Official Documentation:** [https://xqedii.dev/docs/plugins/ultimate-ui](https://xqedii.dev/docs/plugins/ultimate-ui)
-* 💬 **Discord:** Community & Developer Support channels
+* 💬 **Discord Support:** [https://xqedii.dev/dc](https://xqedii.dev/dc)
 
 ---
 
