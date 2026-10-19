@@ -1,0 +1,6 @@
+{
+  "providers": [
+	{"type": "bitmap", "file": "minecraft:font/background.png","ascent": -118,"height": 8,"chars": [""]},
+	{"type": "bitmap", "file": "minecraft:font/spaces.png","ascent": -5000,"height": -3,"chars": [""]}
+  ]
+}

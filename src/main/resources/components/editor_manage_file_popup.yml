@@ -1,5 +1,6 @@
 params:
   title: ""
+
 blocks:
   - type: block
     refreshopacity: true
@@ -54,6 +55,11 @@ blocks:
           width: 847
           height: 2
         unicode: 
+        
+
+
+
+
       - type: grid_block
         id: file_popup_files
         direction: row
@@ -64,6 +70,8 @@ blocks:
           x: 33
           y: 103
         children: []
+
+
       - type: text
         id: editor_files_no_files
         enabled: false
@@ -91,6 +99,8 @@ blocks:
               width: 64
               height: 64
             text: 
+
+
       - type: hitbox
         id: scroll_detection
         layer: 9625.0
@@ -104,6 +114,7 @@ blocks:
           width: 835
           height: 405
         unicode: 
+
       - type: block
         layer: 9608.0
         opacity: 255
@@ -116,6 +127,7 @@ blocks:
           width: 847
           height: 2
         unicode: 
+        
       - type: block
         id: popup_file_selector_cancel
         layer: 9608.0
@@ -142,6 +154,8 @@ blocks:
           width: 103
           height: 41
         unicode: 
+        
+
       - type: block
         id: popup_file_selector_confirm
         layer: 9608.0

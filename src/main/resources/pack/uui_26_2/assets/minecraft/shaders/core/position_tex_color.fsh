@@ -1,0 +1,49 @@
+#version 330
+
+#moj_import <minecraft:dynamictransforms.glsl>
+#moj_import <minecraft:globals.glsl>
+
+uniform sampler2D Sampler0;
+
+in vec2 texCoord0;
+in vec4 vertexColor;
+flat in vec2 uuiRotation;
+flat in float uuiScreenOverlay;
+in vec2 uuiGuiPos;
+flat in vec4 uuiMaskWindow;
+
+out vec4 fragColor;
+
+#moj_import <minecraft:uui_cursor.glsl>
+#moj_import <minecraft:uui_mask.glsl>
+
+void main() {
+    if (uuiScreenOverlay > 0.5 && uui_signature()) {
+        int state = uui_state(GameTime);
+        if (state == 0) {
+            vec4 water = uui_water_tile(texCoord0) * vertexColor;
+            if (water.a == 0.0) {
+                discard;
+            }
+            fragColor = water * ColorModulator;
+            return;
+        }
+
+        vec4 cursor;
+        if (uui_cursor(uuiRotation, state, ScreenSize, cursor)) {
+            fragColor = cursor;
+            return;
+        }
+        discard;
+    }
+
+    if (uui_mask_inside(uuiMaskWindow, uuiGuiPos)) {
+        discard;
+    }
+
+    vec4 color = texture(Sampler0, texCoord0) * vertexColor;
+    if (color.a == 0.0) {
+        discard;
+    }
+    fragColor = color * ColorModulator;
+}

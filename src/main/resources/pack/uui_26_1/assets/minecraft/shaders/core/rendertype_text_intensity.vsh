@@ -18,8 +18,10 @@ out float sphericalVertexDistance;
 out float cylindricalVertexDistance;
 out vec4 vertexColor;
 out vec2 texCoord0;
+out float uuiClipDistance;
 
 void main() {
+    uuiClipDistance = 1.0;
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
 
     sphericalVertexDistance = fog_spherical_distance(Position);
@@ -28,9 +30,10 @@ void main() {
     texCoord0 = UV0;
 
     if (make_hud()) {
+        uuiClipDistance = uui_clip_distance(UV2, Color);
         vertexColor = Color;
-        sphericalVertexDistance = 0.0;
-        cylindricalVertexDistance = 0.0;
+        sphericalVertexDistance = -1.0e6;
+        cylindricalVertexDistance = -1.0e6;
         return;
     }
 }

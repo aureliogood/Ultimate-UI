@@ -6,12 +6,14 @@ screen:
   offsetY: 0
   preview:
     defaultZoom: 0.8
+
   hitboxOffsetX: -2
   hitboxOffsetY: -17
   cursorSize: 10
   cursorSpeed: 1.0
   cursorUnicode: 
   cursorLayer: 9700
+
 blocks:
 - type: block
   id: background
@@ -107,10 +109,14 @@ blocks:
         '15':
           y: 12
           interpolation: smooth-out
-- type: grid_block
+
+  
+- type: container
+  listLayout:
+    direction: horizontal
+    spacing: 40
+    sortOrder: none
   id: options
-  direction: row
-  gap: 40
   position:
     x: 380
     y: 1100

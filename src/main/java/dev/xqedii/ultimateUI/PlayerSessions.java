@@ -1,0 +1,199 @@
+package dev.xqedii.ultimateUI;
+
+import dev.xqedii.ultimateUI.bedrock.BedrockUiService;
+import dev.xqedii.ultimateUI.service.camera.CameraService;
+import dev.xqedii.ultimateUI.service.gui.GuiService;
+import dev.xqedii.ultimateUI.service.input.InputCloseReason;
+import java.util.UUID;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.IllegalPluginAccessException;
+
+public abstract class PlayerSessions extends PluginBootstrap {
+   public static final String Xqedii_2w78nj2m9cegr = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
+
+   public void cleanupPlayerRuntime(Player var1) {
+      if ((295151611 ^ 295151611) != 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null) {
+         if (this.Xqedii_2lp9ah4 != null) {
+            try {
+               this.Xqedii_2lp9ah4.close(var1, InputCloseReason.PROGRAMMATIC);
+            } catch (Throwable var6) {
+            }
+         }
+
+         if (this.Xqedii_1tuq2ol != null) {
+            try {
+               this.Xqedii_1tuq2ol.forceStop(var1);
+            } catch (IllegalPluginAccessException var11) {
+            } catch (Throwable var12) {
+               if (this.isEnabled()) {
+                  this.getLogger().warning(Xqedii_3gob49j32gn7a(var1.getName(), var12.getMessage()));
+               }
+            }
+         }
+
+         if (this.Xqedii_2k1vujp != null) {
+            try {
+               this.Xqedii_2k1vujp.closeGui(var1);
+            } catch (IllegalPluginAccessException var9) {
+            } catch (Throwable var10) {
+               if (this.isEnabled()) {
+                  this.getLogger().warning(Xqedii_f63wj0qi41dm(var1.getName(), var10.getMessage()));
+               }
+            }
+         }
+
+         if (this.Xqedii_1fwpabk != null) {
+            try {
+               this.Xqedii_1fwpabk.clearHuds(var1);
+            } catch (IllegalPluginAccessException var7) {
+            } catch (Throwable var8) {
+               if (this.isEnabled()) {
+                  this.getLogger().warning(Xqedii_ntr9o0o1jk6(var1.getName(), var8.getMessage()));
+               }
+            }
+
+            try {
+               this.Xqedii_1fwpabk.clearPassengerQueue(var1);
+            } catch (Throwable var5) {
+            }
+         }
+
+         if (this.Xqedii_2k1vujp != null) {
+            try {
+               this.Xqedii_2k1vujp.forgetPlayerHeadCache(var1);
+            } catch (Throwable var4) {
+            }
+         }
+
+         if (this.Xqedii_f3ftqgq != null) {
+            try {
+               this.Xqedii_f3ftqgq.forgetPlayer(var1);
+            } catch (Throwable var3) {
+            }
+         }
+
+         this.Xqedii_1hpn9ga.remove(var1.getUniqueId());
+         this.Xqedii_yy2ps2m.remove(var1.getUniqueId());
+      }
+   }
+
+   public void cleanupPlayerRuntimeAndRestoreLocation(Player var1) {
+      if (((510522177 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null) {
+         Location var2 = this.resolvePreferredReturnLocation(var1);
+         this.cleanupPlayerRuntime(var1);
+         this.restoreSessionLocation(var1, var2);
+      }
+   }
+
+   public void restoreSessionLocation(Player var1, Location var2) {
+      if ((782679286 ^ 782679286) != 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null && var2 != null && var2.getWorld() != null) {
+         Location var3 = var1.getLocation();
+         if (!var2.getWorld().equals(var3.getWorld())
+            || !(var3.distanceSquared(var2) <= Double.longBitsToDouble(Xqedii_2q4bpwh.Xqedii_1jn7aat2dc53m(1822363760917287099L, 45)))) {
+            Xqedii_38o2zes.Xqedii_2pl8m41(var1, var2);
+         }
+      }
+   }
+
+   public void teleportToReturnLocationAndClear(Player var1) {
+      if ((1049111632 * 1049111632 + 1049111632 & 1) != 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null) {
+         Location var2 = this.resolvePreferredReturnLocation(var1);
+         this.Xqedii_1hpn9ga.remove(var1.getUniqueId());
+         if (var2 != null) {
+            Xqedii_38o2zes.Xqedii_fxq2htx(var1, var2);
+         }
+      }
+   }
+
+   public Location resolvePreferredReturnLocation(Player var1) {
+      if ((450130340 * (450130340 + 1) & 1) != 0) {
+         throw new IllegalStateException();
+      } else if (var1 == null) {
+         return null;
+      } else {
+         if (this.Xqedii_1tuq2ol != null && this.Xqedii_1tuq2ol.isCameraActive(var1)) {
+            Location var2 = this.Xqedii_1tuq2ol.getCameraBaseLocation(var1);
+            if (var2 != null && var2.getWorld() != null) {
+               return var2.clone();
+            }
+         }
+
+         Location var3 = this.Xqedii_1hpn9ga.get(var1.getUniqueId());
+         return var3 != null && var3.getWorld() != null ? var3.clone() : null;
+      }
+   }
+
+   public Location resolveReturnLocationBeforeOpen(Player var1, boolean var2) {
+      if ((-1100550004 * -1100550004 - -1100550004 & 1) != 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null && !var2) {
+         Location var3 = this.resolvePreferredReturnLocation(var1);
+         return var3 != null ? var3 : var1.getLocation().clone();
+      } else {
+         return null;
+      }
+   }
+
+   public void updateReturnLocationAfterOpen(Player var1, boolean var2, boolean var3, Location var4) {
+      if ((407205790 * 407205790 - 407205790 & 1) != 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null && var2) {
+         UUID var5 = var1.getUniqueId();
+         if (var3) {
+            this.Xqedii_1hpn9ga.remove(var5);
+         } else {
+            Location var6 = var4;
+            if (var4 == null || var4.getWorld() == null) {
+               var6 = var1.getLocation().clone();
+            }
+
+            this.Xqedii_1hpn9ga.put(var5, var6.clone());
+         }
+      }
+   }
+
+   public GuiService getGuiService() {
+      if (((-1747772420 << 1 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.Xqedii_2k1vujp;
+      }
+   }
+
+   public CameraService getCameraService() {
+      if ((723237331 * 723237331 + 723237331 & 1) != 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.Xqedii_1tuq2ol;
+      }
+   }
+
+   public BedrockUiService getBedrockUiService() {
+      if (((-250816253 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.Xqedii_1yufpo0;
+      }
+   }
+
+   private static /* synthetic */ String Xqedii_3gob49j32gn7a(String string, String string2) {
+        return Xqedii_2q4bpwh.Xqedii_1dxilye2xlpkd("eGa+P5CCSc7blHFb0V8dDvpbrTzsmLbwZVKu9cB2Sulxp+vh6xE3oQMfgSeTr+u1V3rEFIStPdu/BYvJbivwLGax+AvnUHxzkvTQiWGn5wSyhPuNH1Dtuiu6GZw=") + string + Xqedii_2q4bpwh.Xqedii_1dxilye2xlpkd("iSWmaIGBLLWeYr66jAEr8SPB0KEbXV0R8OmH2jvqXX4=") + string2;
+    }
+
+    private static /* synthetic */ String Xqedii_f63wj0qi41dm(String string, String string2) {
+        return Xqedii_2q4bpwh.Xqedii_1dxilye2xlpkd("mxNjZI0F3xaqev7KF7bGfOczBmClwlipMAceC1HJGihd/UQDoKvhHo75ROtPKvdn/8SDIHO4ltckqKxWAFQlgoEi7/xHJoOXuViOJw==") + string + Xqedii_2q4bpwh.Xqedii_1dxilye2xlpkd("iSWmaIGBLLWeYr66jAEr8SPB0KEbXV0R8OmH2jvqXX4=") + string2;
+    }
+
+    private static /* synthetic */ String Xqedii_ntr9o0o1jk6(String string, String string2) {
+        return Xqedii_2q4bpwh.Xqedii_1dxilye2xlpkd("8um78NC2erzMC/ZdFsQS5xO0D5sUN4PANGMBzwfg0f9tm977my0GVbYpkEcBM3yMTZoKH/nHinDSks4nAooULGv9s9VQBslKqL41ogjB") + string + Xqedii_2q4bpwh.Xqedii_1dxilye2xlpkd("iSWmaIGBLLWeYr66jAEr8SPB0KEbXV0R8OmH2jvqXX4=") + string2;
+    }
+}

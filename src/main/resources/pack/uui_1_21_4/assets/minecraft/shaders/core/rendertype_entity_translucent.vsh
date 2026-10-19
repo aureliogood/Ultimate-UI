@@ -28,7 +28,10 @@ out vec2 texCoord2;
 
 #moj_import <minecraft:hud.glsl>
 
+out float uuiClipDistance;
+
 void main() {
+    uuiClipDistance = 1.0;
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
 
     vertexDistance = fog_distance(Position, FogShape);
@@ -38,8 +41,9 @@ void main() {
     texCoord2 = vec2(UV2);
 
     if (make_hud()) {
+        uuiClipDistance = uui_item_clip_distance(UV2);
         vertexColor = Color;
-        vertexDistance = 0.0;
+        vertexDistance = -1.0e6;
         return;
     }
 }

@@ -10,4 +10,6 @@ public enum EditorTool {
    TEXT,
    COMMANDS,
    ANIMATION;
+   public static final String Xqedii_ictciytja46q = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
+
 }

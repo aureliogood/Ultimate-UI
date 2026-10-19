@@ -29,7 +29,7 @@ void main() {
     vertexColor = Color;
 
     if (make_hud()) {
-        sphericalVertexDistance = 0.0;
-        cylindricalVertexDistance = 0.0;
+        sphericalVertexDistance = -1.0e6;
+        cylindricalVertexDistance = -1.0e6;
     }
 }

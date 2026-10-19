@@ -1,73 +1,122 @@
 package dev.xqedii.ultimateUI.api.event;
 
+import dev.xqedii.ultimateUI.Xqedii_1ybtgvo;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public final class UltimateUIBlockClickEvent extends Event implements Cancellable {
-   private static final HandlerList HANDLERS = new HandlerList();
-   private final Player player;
-   private final String pageName;
-   private final String blockId;
-   private final double blockLayer;
-   private final double cursorX;
-   private final double cursorY;
-   private final UltimateUIBlockClickEvent.ClickType clickType;
-   private boolean cancelled;
+public final class UltimateUIBlockClickEvent extends UltimateUIEvent implements Cancellable {
+   public static final String Xqedii_23jepge88cual = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
+   public static final HandlerList Xqedii_3ngmx5c;
+   public final double Xqedii_3tfoj83;
+   public final UltimateUIBlockClickEvent.ClickType Xqedii_3qcqdkz;
+   public boolean Xqedii_37j219m;
 
    public UltimateUIBlockClickEvent(Player var1, String var2, String var3, double var4, double var6, double var8, UltimateUIBlockClickEvent.ClickType var10) {
-      this.player = var1;
-      this.pageName = var2 == null ? "" : var2;
-      this.blockId = var3 == null ? "" : var3;
-      this.blockLayer = Double.isFinite(var4) ? var4 : 0.0;
-      this.cursorX = Double.isFinite(var6) ? var6 : 0.0;
-      this.cursorY = Double.isFinite(var8) ? var8 : 0.0;
-      this.clickType = var10 == null ? UltimateUIBlockClickEvent.ClickType.LEFT : var10;
+      this(var1, var2, var3, var4, var6, var8, var6, var8, var10);
    }
 
-   public Player getPlayer() {
-      return this.player;
-   }
-
-   public String getPageName() {
-      return this.pageName;
-   }
-
-   public String getBlockId() {
-      return this.blockId;
+   public UltimateUIBlockClickEvent(
+      Player var1, String var2, String var3, double var4, double var6, double var8, double var10, double var12, UltimateUIBlockClickEvent.ClickType var14
+   ) {
+      super(var1, var2, var3, var6, var8, var10, var12);
+      this.Xqedii_3tfoj83 = finite(var4);
+      this.Xqedii_3qcqdkz = var14 == null ? UltimateUIBlockClickEvent.ClickType.LEFT : var14;
    }
 
    public double getBlockLayer() {
-      return this.blockLayer;
-   }
-
-   public double getCursorX() {
-      return this.cursorX;
-   }
-
-   public double getCursorY() {
-      return this.cursorY;
+      if (((-1564868984 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.Xqedii_3tfoj83;
+      }
    }
 
    public UltimateUIBlockClickEvent.ClickType getClickType() {
-      return this.clickType;
+      if ((-1064709505 ^ -1064709505) != 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.Xqedii_3qcqdkz;
+      }
+   }
+
+   public boolean isLeftClick() {
+      if ((372397502 * 372397502 - 372397502 & 1) != 0) {
+         throw new IllegalStateException();
+      } else {
+         return ((this.Xqedii_3qcqdkz == UltimateUIBlockClickEvent.ClickType.LEFT
+            ? Xqedii_1ybtgvo.Xqedii_1d67bvumttnat(-1057192551, 6)
+            : Xqedii_1ybtgvo.Xqedii_1n4un3y8wzouz(-897012075, 27)) != 0);
+      }
+   }
+
+   public boolean isRightClick() {
+      if ((1284672177 * (1284672177 + 1) & 1) != 0) {
+         throw new IllegalStateException();
+      } else {
+         return ((this.Xqedii_3qcqdkz == UltimateUIBlockClickEvent.ClickType.RIGHT
+            ? Xqedii_1ybtgvo.Xqedii_34sv3mwl82reu(-310270577, 27)
+            : Xqedii_1ybtgvo.Xqedii_34sv3mwl82reu(-27780520, 23)) != 0);
+      }
+   }
+
+   public boolean isScroll() {
+      if (((-226729507 << 1 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         return ((this.Xqedii_3qcqdkz != UltimateUIBlockClickEvent.ClickType.SCROLL_UP
+               && this.Xqedii_3qcqdkz != UltimateUIBlockClickEvent.ClickType.SCROLL_DOWN
+            ? Xqedii_1ybtgvo.Xqedii_25oxam6932jel(-1214451448, 12)
+            : Xqedii_1ybtgvo.Xqedii_34sv3mwl82reu(1677418601, 17)) != 0);
+      }
+   }
+
+   public boolean isShiftClick() {
+      if (((-1197613203 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.getPlayer().isSneaking();
+      }
    }
 
    public boolean isCancelled() {
-      return this.cancelled;
+      if ((261402139 * (261402139 + 1) & 1) != 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.Xqedii_37j219m;
+      }
    }
 
    public void setCancelled(boolean var1) {
-      this.cancelled = var1;
+      if (((-2016183676 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         this.Xqedii_37j219m = var1;
+      }
    }
 
    public HandlerList getHandlers() {
-      return HANDLERS;
+      if (((751018334 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         return Xqedii_3ngmx5c;
+      }
    }
 
    public static HandlerList getHandlerList() {
-      return HANDLERS;
+      if ((-1640289620 * -1640289620 + -1640289620 & 1) != 0) {
+         throw new IllegalStateException();
+      } else {
+         return Xqedii_3ngmx5c;
+      }
+   }
+
+   static {
+      if ((-1163070103 * -1163070103 + -1163070103 & 1) != 0) {
+         throw new IllegalStateException();
+      } else {
+         Xqedii_3ngmx5c = new HandlerList();
+      }
    }
 
    public static enum ClickType {
@@ -75,5 +124,7 @@ public final class UltimateUIBlockClickEvent extends Event implements Cancellabl
       RIGHT,
       SCROLL_UP,
       SCROLL_DOWN;
+      public static final String Xqedii_fhyb8wad4lsu = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
+
    }
 }

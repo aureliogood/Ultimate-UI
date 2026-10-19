@@ -1,0 +1,37 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "cases": [
+      {
+        "when": "slim",
+        "model": {
+          "type": "minecraft:special",
+          "base": "minecraft:uui/player/slim/left_arm",
+          "model": {
+            "type": "minecraft:head",
+            "kind": "player"
+          }
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:special",
+      "base": "minecraft:uui/player/left_arm",
+      "model": {
+        "type": "minecraft:head",
+        "kind": "player"
+      }
+    },
+    "tints": [
+      {
+        "type": "minecraft:dye",
+        "default": [
+          1,
+          1,
+          1
+        ]
+      }
+    ]
+  }
+}

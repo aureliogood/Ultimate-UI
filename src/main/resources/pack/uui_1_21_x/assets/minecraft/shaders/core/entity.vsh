@@ -31,7 +31,16 @@ out vec4 lightMapColor;
 out vec4 overlayColor;
 out vec2 texCoord0;
 
+flat out int uuiPart;
+
+#define UUI_WORLD_PART_BLOCK_LIGHT 1
+
+out float uuiClipDistance;
+
 void main() {
+    uuiClipDistance = 1.0;
+    uuiPart = 0;
+
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
 
     sphericalVertexDistance = fog_spherical_distance(Position);
@@ -55,18 +64,27 @@ void main() {
     texCoord0 = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;
 #endif
 
+    ivec2 uuiLight = UV2 / 16;
+    if (uuiLight.x == UUI_WORLD_PART_BLOCK_LIGHT && uuiLight.y >= 1 && uuiLight.y <= UUI_PART_MAX) {
+        uuiPart = uuiLight.y;
+        lightMapColor = vec4(1.0);
+    }
+
     if (make_hud()) {
+        uuiClipDistance = uui_item_clip_distance(UV2);
+        uuiPart = uuiPartId;
+
         #ifdef PER_FACE_LIGHTING
             vertexPerFaceColorBack = Color;
             vertexPerFaceColorFront = Color;
         #else
             vertexColor = Color;
         #endif
-        
-        lightMapColor = vec4(1.0, 1.0, 1.0, 1.0); 
+
+        lightMapColor = vec4(1.0, 1.0, 1.0, 1.0);
         overlayColor = vec4(1.0, 1.0, 1.0, 1.0);
-        
-        sphericalVertexDistance = 0.0;
-        cylindricalVertexDistance = 0.0;
+
+        sphericalVertexDistance = -1.0e6;
+        cylindricalVertexDistance = -1.0e6;
     }
 }

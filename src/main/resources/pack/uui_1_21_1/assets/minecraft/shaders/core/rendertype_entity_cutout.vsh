@@ -25,7 +25,10 @@ out vec4 lightMapColor;
 out vec4 overlayColor;
 out vec2 texCoord0;
 
+out float uuiClipDistance;
+
 void main() {
+    uuiClipDistance = 1.0;
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     vertexDistance = fog_distance(Position, FogShape);
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
@@ -34,9 +37,10 @@ void main() {
     texCoord0 = UV0;
 
     if (make_hud(Position, ScreenSize, ModelViewMat)) {
+        uuiClipDistance = uui_item_clip_distance(UV2);
         vertexColor = Color;
         lightMapColor = vec4(1.0);
         overlayColor = vec4(1.0);
-        vertexDistance = 0.0;
+        vertexDistance = -1.0e6;
     }
 }

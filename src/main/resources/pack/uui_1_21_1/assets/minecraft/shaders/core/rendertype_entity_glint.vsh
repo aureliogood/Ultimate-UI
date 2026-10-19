@@ -20,6 +20,6 @@ void main() {
     texCoord0 = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;
 
     if (make_hud(Position, ScreenSize, ModelViewMat)) {
-        vertexDistance = 0.0;
+        vertexDistance = -1.0e6;
     }
 }

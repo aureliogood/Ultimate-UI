@@ -7,16 +7,18 @@
 #
 # UltimateUI's main configuration file
 #
-# In this file, you will find the most important editor settings, the method for
-# serving the resource pack, and the licenses. Remember not to share it with anyone.
+# In this file, you will find the most important editor settings and the method
+# for serving the resource pack.
 #
 # If you need help with the plugin, take a look here:
 # https://xqedii.dev/docs/plugins/ultimate-ui
-license:
-  license-key: 'wuvGRbxpKlGS'
+
 editor:
   placeholders:
     text-refresh: 20
+    resolve-in-editor: true
+  show-npc:
+    enabled: false
   autosave:
     enabled: true
     interval-seconds: 600
@@ -27,6 +29,49 @@ editor:
     volume: 1.0
   max-page-elements: 500
   show-editor-files: false
+  rendering:
+    fix-shaders: false
+    fix-shaders-y-offset: 2.1006
+    fix-shaders-forward-offset: 0.3781
+    fix-shaders-layer-gap: 0.000004
+    hud-scale-divisor: 1000.0
+  debug-scripting: false
+
+experimental:
+  instant-cursor: true # Client-sided cursor
+  betterhud-support: false
+  shaders-editor: false
+
+bedrock:
+  enabled: true
+  debug: false
+  auto-build: true
+  auto-install-to-geyser: true
+  geyser-packs-folder: ''
+  pack:
+    name: UltimateUI
+  stay-open: true
+  input:
+    inline: true
+  player-head:
+    url-template: https://mc-heads.net/avatar/{id}/128
+    enabled: true
+    probe-url: true
+  player-skin:
+    url-template: https://mc-heads.net/body/{id}/256
+  canvas:
+    width: 1920
+    height: 1080
+    corner-radius: 26
+  reference-ui:
+    width: 427
+    height: 240
+  text:
+    scale-multiplier: 1.0
+    java-font-size: 11.0
+    block-glyph-height: 64.0
+    debug-probe: false
+
 resource-pack:
   apply-on-join: true
   kick-on-decline: false
@@ -45,6 +90,7 @@ resource-pack:
       url: "link"
     external-pack:
       enabled: false
+      auto-deploy: "None" # ItemsAdder, Nexo, Oraxen or None
     xqedii-setups:
       # If this plugin is installed on one of my setups, you can enable this option and the
       # plugin will take care of the entire synchronization of the 2 resource packs for you.

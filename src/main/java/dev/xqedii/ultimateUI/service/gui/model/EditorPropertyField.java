@@ -19,4 +19,6 @@ public enum EditorPropertyField {
    DESIGN_TEXT_WRAP,
    ITEM_DESIGN_ITEM,
    ITEM_DESIGN_GLOWING;
+   public static final String Xqedii_aiq8ulike6xo = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
+
 }

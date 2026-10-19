@@ -1,25 +1,13 @@
 package dev.xqedii.ultimateUI.service.camera;
 
 import dev.xqedii.ultimateUI.UltimateUI;
+import dev.xqedii.ultimateUI.Xqedii_1gryrhw;
+import dev.xqedii.ultimateUI.Xqedii_38o2zes;
 import dev.xqedii.ultimateUI.service.hud.HudService;
-import dev.xqedii.ultimateUI.util.PlatformCompat;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import dev.xqedii.ultimateUI.service.npc.CursorNpcService;
 import java.util.UUID;
-import org.bukkit.Bukkit;
+import java.util.function.DoubleSupplier;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
-import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
@@ -29,389 +17,537 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-public class CameraService {
-   private static final double CURSOR_RENDER_EPSILON = 0.005;
-   private static final String CAMERA_INTERNAL_META = "xqgui_internal_camera";
-   private static final double CAMERA_BASE_Y_OFFSET = 1.5;
-   private static final double CAMERA_VIEW_Z_OFFSET = 0.0;
-   private static final double CAMERA_SEAT_Y_OFFSET = -1.5;
-   private static final double CAMERA_SEAT_Z_OFFSET = 0.0;
-   private static final int EDITOR_CURSOR_INTERPOLATION_DURATION_DEFAULT = 1;
-   private static final int EDITOR_CURSOR_TELEPORT_DURATION_DEFAULT = 1;
-   private static final int STATIONARY_CURSOR_CALLBACK_INTERVAL_TICKS = 2;
-   private final UltimateUI plugin;
-   private final HudService hudService;
-   private final Map<UUID, Boolean> cameraStatus = new HashMap<>();
-   private final Map<UUID, Set<CameraService.BlockPos>> clientBarrierBlocks = new HashMap<>();
-   private final Map<UUID, CameraService.BlockPos> clientBarrierCenters = new HashMap<>();
-   private final Map<UUID, Set<UUID>> cameraInternalEntityIds = new HashMap<>();
-   private final Map<UUID, Location> cameraBaseLocations = new HashMap<>();
-   private final Map<UUID, Integer> cameraRunTokens = new HashMap<>();
-   private final Map<UUID, Double> cameraCursorLayers = new HashMap<>();
-   private final Map<UUID, Vector> cursorVisualLocks = new HashMap<>();
-   private final Map<UUID, Float> cursorVisualLockPitches = new HashMap<>();
-   private final Map<Class<?>, Method> craftEntityGetHandleMethodCache = new HashMap<>();
-   private static final BlockData CLIENT_BARRIER_DATA = Material.BARRIER.createBlockData();
-   private Method craftPlayerGetHandleMethod;
-   private Field serverPlayerConnectionField;
-   private Method playerConnectionSendMethod;
-   private Constructor<?> setCameraPacketConstructor;
-   private boolean spectateReflectionReady;
-   private boolean spectateReflectionUnavailable;
-   private CameraService.CursorListener cursorListener;
+public class CameraService extends CameraSessions {
+   public static final String Xqedii_1os5w2orl3lxc = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
 
-   public CameraService(UltimateUI var1, HudService var2) {
-      this.plugin = var1;
-      this.hudService = var2;
+   public CameraService(UltimateUI var1, HudService var2, CursorNpcService var3) {
+      super(var1, var2, var3);
+      this.reloadConfiguration();
+      this.registerShaderCursorTimeGuard();
+      this.Xqedii_3ldoae7();
    }
 
-   public boolean isCameraActive(Player var1) {
-      return this.cameraStatus.getOrDefault(var1.getUniqueId(), false);
+   public void syncCursorNpc(Player var1, boolean var2) {
+      if (((-1959793866 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null && this.Xqedii_2seki4b != null && this.isCameraActive(var1)) {
+         boolean var3 = this.Xqedii_2seki4b.isSpawned(var1.getUniqueId());
+         if (!var2) {
+            if (var3) {
+               this.Xqedii_2seki4b.despawn(var1);
+            }
+         } else if (!var3) {
+            Location var4 = this.getCameraBaseLocation(var1);
+            if (var4 != null && var4.getWorld() != null) {
+               this.Xqedii_2seki4b.spawn(var1, var4);
+            }
+         }
+      }
    }
 
-   public Location getCameraBaseLocation(Player var1) {
-      if (var1 == null) {
-         return null;
+   public void start(Player var1, double var2, double var4, double var6, double var8, double var10, double var12, String var14, double var15, boolean var17) {
+      if ((2083689144 * 2083689144 - 2083689144 & 1) != 0) {
+         throw new IllegalStateException();
       } else {
-         Location var2 = this.cameraBaseLocations.get(var1.getUniqueId());
-         return var2 == null ? null : var2.clone();
+         this.start(var1, var2, var4, var6, var8, var10, var12, var14, var15, var17, null);
       }
    }
 
-   public void setCameraActive(Player var1, boolean var2) {
-      if (var1 != null) {
-         this.cameraStatus.put(var1.getUniqueId(), var2);
-      }
-   }
-
-   public void forceStop(Player var1) {
-      this.cleanupCameraRuntime(var1, true);
-   }
-
-   public void updateActiveCursorLayer(Player var1, double var2) {
-      if (var1 != null && Double.isFinite(var2)) {
-         UUID var4 = var1.getUniqueId();
-         if (this.cameraStatus.getOrDefault(var4, false)) {
-            this.cameraCursorLayers.put(var4, var2);
-            Entity var5 = this.hudService.getHud(var1, "cursor");
-            if (var5 != null) {
-               Vector var6 = this.hudService.getHudLocation(var5);
-               if (var6 != null && !(Math.abs(var6.getZ() - var2) <= 0.005)) {
-                  this.hudService
-                     .moveHud(
-                        var5,
-                        new Vector(var6.getX(), var6.getY(), var2),
-                        this.resolveEditorCursorInterpolationDurationTicks(),
-                        this.resolveEditorCursorTeleportDurationTicks()
-                     );
-               }
-            }
-         }
-      }
-   }
-
-   public void setCursorListener(CameraService.CursorListener var1) {
-      this.cursorListener = var1;
-   }
-
-   public void lockCursorVisual(Player var1, double var2, double var4) {
-      if (var1 != null && Double.isFinite(var2) && Double.isFinite(var4)) {
-         double var6 = 0.0;
-         Entity var8 = this.hudService.getHud(var1, "cursor");
-         if (var8 != null) {
-            Vector var9 = this.hudService.getHudLocation(var8);
-            if (var9 != null && Double.isFinite(var9.getZ())) {
-               var6 = var9.getZ();
-            }
-         }
-
-         this.cursorVisualLocks.put(var1.getUniqueId(), new Vector(var2, var4, var6));
-         this.cursorVisualLockPitches.put(var1.getUniqueId(), var1.getLocation().getPitch());
-      }
-   }
-
-   public void unlockCursorVisual(Player var1) {
-      if (var1 != null) {
-         this.cursorVisualLocks.remove(var1.getUniqueId());
-         this.cursorVisualLockPitches.remove(var1.getUniqueId());
-      }
-   }
-
-   public void spectate(Player var1, Entity var2) {
-      if (var1 != null) {
-         try {
-            if (!this.ensureSpectateReflectionReady(var1)) {
-               return;
+   public void start(
+      Player var1,
+      double var2,
+      double var4,
+      double var6,
+      double var8,
+      double var10,
+      double var12,
+      String var14,
+      double var15,
+      boolean var17,
+      DoubleSupplier var18
+   ) {
+      if ((1652103246 ^ 1652103246) != 0) {
+         throw new IllegalStateException();
+      } else if (var1 != null) {
+         UUID var19 = var1.getUniqueId();
+         Location var20 = this.Xqedii_13w07gw(var1);
+         Location var21 = this.isCameraActive(var1) ? this.getCameraBaseLocation(var1) : null;
+         this.Xqedii_2xomr7i(var1, (Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662975545, 19) != 0));
+         Location var22 = var1.getLocation().clone();
+         if (var20 != null && var20.getWorld() != null && var20.getWorld().equals(var22.getWorld())) {
+            if (var20.distanceSquared(var22) > Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(6482950830172643950L, 54))) {
+               this.Xqedii_11is6fi.suppressEditorTeleportClose(var1, Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(8193993018776244184L, 30));
+               Xqedii_38o2zes.Xqedii_fxq2htx(var1, var20);
+               var22 = var1.getLocation().clone();
             }
 
-            Object var3 = this.craftPlayerGetHandleMethod.invoke(var1);
-            if (var3 == null) {
-               return;
-            }
-
-            Object var4 = this.serverPlayerConnectionField.get(var3);
-            if (var4 == null) {
-               return;
-            }
-
-            Object var5 = var2 == null ? var3 : this.resolveCraftEntityHandle(var2);
-            if (var5 == null) {
-               return;
-            }
-
-            Object var6 = this.setCameraPacketConstructor.newInstance(var5);
-            this.playerConnectionSendMethod.invoke(var4, var6);
-         } catch (Exception var7) {
-            var7.printStackTrace();
-         }
-      }
-   }
-
-   private boolean ensureSpectateReflectionReady(Player var1) {
-      if (this.spectateReflectionReady) {
-         return true;
-      } else if (!this.spectateReflectionUnavailable && var1 != null) {
-         try {
-            this.craftPlayerGetHandleMethod = var1.getClass().getMethod("getHandle");
-            Object var2 = this.craftPlayerGetHandleMethod.invoke(var1);
-            if (var2 == null) {
-               return false;
-            } else {
-               this.serverPlayerConnectionField = var2.getClass().getField("connection");
-               Object var3 = this.serverPlayerConnectionField.get(var2);
-               if (var3 == null) {
-                  return false;
-               } else {
-                  Class var4 = Class.forName("net.minecraft.network.protocol.Packet");
-                  Class var5 = Class.forName("net.minecraft.world.entity.Entity");
-                  this.playerConnectionSendMethod = var3.getClass().getMethod("send", var4);
-                  this.setCameraPacketConstructor = Class.forName("net.minecraft.network.protocol.game.ClientboundSetCameraPacket").getConstructor(var5);
-                  this.spectateReflectionReady = true;
-                  return true;
-               }
-            }
-         } catch (Exception var6) {
-            this.spectateReflectionUnavailable = true;
-            var6.printStackTrace();
-            return false;
-         }
-      } else {
-         return false;
-      }
-   }
-
-   private Object resolveCraftEntityHandle(Entity var1) throws ReflectiveOperationException {
-      if (var1 == null) {
-         return null;
-      } else {
-         Class var2 = var1.getClass();
-         Method var3 = this.craftEntityGetHandleMethodCache.get(var2);
-         if (var3 == null) {
-            var3 = var2.getMethod("getHandle");
-            this.craftEntityGetHandleMethodCache.put(var2, var3);
-         }
-
-         return var3.invoke(var1);
-      }
-   }
-
-   public void start(Player var1, double var2, double var4, double var6, double var8, double var10, double var12, String var14, double var15) {
-      if (var1 != null) {
-         UUID var17 = var1.getUniqueId();
-         Location var18 = this.resolveCameraBaseLocation(var1);
-         this.cleanupCameraRuntime(var1, true);
-         Location var19 = var1.getLocation().clone();
-         if (var18 != null && var18.getWorld() != null && var18.getWorld().equals(var19.getWorld())) {
-            if (var18.distanceSquared(var19) > 0.01) {
-               PlatformCompat.teleportSafely(var1, var18);
-               var19 = var1.getLocation().clone();
-            }
-
-            if (var19.getWorld() != null && var19.getWorld().equals(var18.getWorld())) {
-               var18 = var19;
+            if (var22.getWorld() != null && var22.getWorld().equals(var20.getWorld())) {
+               var20 = var22;
             }
          } else {
-            var18 = var19;
+            var20 = var22;
          }
 
-         if (var18 == null || var18.getWorld() == null) {
-            var18 = var1.getLocation().clone();
+         if (var20 == null || var20.getWorld() == null) {
+            var20 = var1.getLocation().clone();
          }
 
-         this.cameraStatus.put(var17, true);
-         this.cameraBaseLocations.put(var17, var18.clone());
-         this.cameraCursorLayers.put(var17, var15);
-         int var20 = this.cameraRunTokens.merge(var17, 1, Integer::sum);
-         Location var21 = var18.clone().add(0.0, 1.5, 0.0);
-         TextDisplay var22 = (TextDisplay)var1.getWorld().spawn(var21, TextDisplay.class);
-         TextDisplay var23 = (TextDisplay)var1.getWorld().spawn(var21.clone().add(0.0, -1.5, 0.0), TextDisplay.class);
-         this.hudService.enforceFullBrightness(var22);
-         this.hudService.enforceFullBrightness(var23);
-         var22.setPersistent(false);
-         var23.setPersistent(false);
-         var22.setMetadata("xqgui_internal_camera", new FixedMetadataValue(this.plugin, true));
-         var23.setMetadata("xqgui_internal_camera", new FixedMetadataValue(this.plugin, true));
-         var22.setGravity(false);
-         var23.setGravity(false);
-         var23.addPassenger(var1);
-         this.trackCameraEntity(var1, var22);
-         this.trackCameraEntity(var1, var23);
-         double var24 = Math.max(1.0, var10);
-         double var26 = this.resolveEditorCursorMovementSpeed(var12);
-         String var28 = var14 != null && !var14.isBlank() ? var14 : "\ue67c";
-         PlatformCompat.runEntityTaskLater(
-            this.plugin,
+         if (var21 != null && var21.getWorld() != null && var21.getWorld().equals(var20.getWorld())) {
+            var20 = var21.clone();
+            if (var20.distanceSquared(var1.getLocation()) > Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(-5480842413364263716L, 55))) {
+               this.Xqedii_11is6fi.suppressEditorTeleportClose(var1, Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-8366945331248696504L, 7));
+               Xqedii_38o2zes.Xqedii_fxq2htx(var1, var20);
+            }
+         }
+
+         boolean var23 = this.isShaderCursorWanted(var1);
+         if (this.Xqedii_1ilze2o != null && this.Xqedii_1ilze2o.isFixShadersEnabled(var1)) {
+            var20.setPitch(Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1600679081, 13)));
+            if (Math.abs(var1.getLocation().getPitch()) > Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1664129608, 26))) {
+               Xqedii_38o2zes.Xqedii_1clfsd0(var1, var1.getLocation().getYaw(), Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 10)));
+            }
+         }
+
+         if (var23) {
+            var20.setPitch(Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(302042562, 2)));
+            Xqedii_38o2zes.Xqedii_1clfsd0(
+               var1,
+               Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 19)),
+               Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1792283379, 2))
+            );
+         }
+
+         Location var24 = var20.clone();
+         this.Xqedii_1npzu61.put(var19, Boolean.valueOf((Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1125580345, 29) != 0)));
+         this.Xqedii_13g85ac(var1);
+         this.Xqedii_20i24gg.put(var19, var20.clone());
+         this.Xqedii_1ilze2o
+            .setHudAnchorOrigin(
+               var1,
+               var20.clone()
+                  .add(
+                     Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(8958910505684961553L, 12)),
+                     Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-6825164043968862285L, 27)),
+                     Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_26zz0vzoi15yf(4512820408481345827L, 29))
+                  )
+            );
+         this.Xqedii_sa0ugb8.put(var19, var15);
+         int var25 = this.Xqedii_3lrjl61.merge(var19, Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1600670889, 13), Integer::sum);
+         Location var26 = var20.clone()
+            .add(
+               Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(1740619509946162580L, 5)),
+               Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(-8235032194021425469L, 33)),
+               Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_26zz0vzoi15yf(4512820408481345827L, 55))
+            );
+         Location var27 = var26.clone()
+            .add(
+               Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(653440123071068638L, 60)),
+               Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(3484835793756607094L, 63)),
+               Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-2447405696808803463L, 52))
+            );
+         if (var23) {
+            var27.setY(this.Xqedii_axq4lm3(var27, var26.getY()));
+         }
+
+         TextDisplay var28 = (TextDisplay)var1.getWorld().spawn(var26, TextDisplay.class);
+         TextDisplay var29 = (TextDisplay)var1.getWorld().spawn(var27, TextDisplay.class);
+         this.Xqedii_1ilze2o.enforceFullBrightness(var28);
+         this.Xqedii_1ilze2o.enforceFullBrightness(var29);
+         var28.setPersistent((Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 16) != 0));
+         var29.setPersistent((Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-2078015077, 27) != 0));
+         var28.setMetadata(
+            Xqedii_1gryrhw.Xqedii_1ls6n5izs316s("GgbFcWmYJdxEzI/hgzcsZBWzJgOy/DkGUfgLj6Yg9e2p665xiNrpJI1MTNjW4ADHmqfJXdCayoshg5riZX7uKhVet2EMuQ=="),
+            new FixedMetadataValue(this.Xqedii_11is6fi, Boolean.valueOf((Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451385, 7) != 0)))
+         );
+         var29.setMetadata(
+            Xqedii_1gryrhw.Xqedii_1ls6n5izs316s("GgbFcWmYJdxEzI/hgzcsZBWzJgOy/DkGUfgLj6Yg9e2p665xiNrpJI1MTNjW4ADHmqfJXdCayoshg5riZX7uKhVet2EMuQ=="),
+            new FixedMetadataValue(this.Xqedii_11is6fi, Boolean.valueOf((Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451261, 2) != 0)))
+         );
+         var28.setGravity((Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-791063874, 22) != 0));
+         var29.setGravity((Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 27) != 0));
+         var29.addPassenger(var1);
+         this.Xqedii_3hes1gs(var1, var28);
+         this.Xqedii_3hes1gs(var1, var29);
+         this.Xqedii_1ilze2o.setHudMountEntity(var1, var28);
+         double var30 = var23
+            ? Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(7885925668423818998L, 59))
+            : Math.max(Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_3na9xzh18lsvy(3618631665414348934L, 32)), var10);
+         double var32 = this.Xqedii_1484j9j(var12);
+         String var34 = var23
+            ? Xqedii_1gryrhw.Xqedii_1ls6n5izs316s("bbNMhvS29Z/HEaMgSF1jLvZKYfzYvrtdHh5vsA==")
+            : (var14 != null && !var14.isBlank() ? var14 : Xqedii_1gryrhw.Xqedii_1ls6n5izs316s("d6vttvAI538te0jKh1Ql1EnqGB9hJDyfJ7GisfHe"));
+         Xqedii_38o2zes.Xqedii_2sj63w1(
+            this.Xqedii_11is6fi,
             var1,
             () -> {
-               if (!var1.isOnline()) {
-                  this.cleanupCameraRuntime(var1, true);
+               if ((-1314473589 ^ -1314473589) != 0) {
+                  throw new IllegalStateException();
+               } else if (!var1.isOnline()) {
+                  this.Xqedii_2xomr7i(var1, (Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(1208170264, 4) != 0));
                } else {
-                  Integer var19x = this.cameraRunTokens.get(var1.getUniqueId());
-                  if (var19x != null && var19x == var20) {
-                     if (!this.cameraStatus.getOrDefault(var1.getUniqueId(), false)) {
-                        this.cleanupCameraRuntime(var1, true);
+                  Integer var24x = this.Xqedii_3lrjl61.get(var1.getUniqueId());
+                  if (var24x != null && var24x == var25) {
+                     if (!this.Xqedii_1npzu61.getOrDefault(var1.getUniqueId(), Boolean.valueOf((Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(604085124, 3) != 0)))) {
+                        this.Xqedii_2xomr7i(var1, (Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1203770644, 18) != 0));
                      } else {
-                        var1.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, -1, 0, false, false));
-                        this.spectate(var1, var22);
-                        double[] var20x = new double[]{var2 / 2.0 + var6};
-                        double[] var21x = new double[]{((double)var1.getLocation().getPitch() + 90.0) / 180.0 * var4 + var8};
-                        float[] var22x = new float[]{var1.getLocation().getYaw()};
-                        float[] var23x = new float[]{var1.getLocation().getPitch()};
-                        double[] var24x = new double[]{-1.0};
-                        double[] var25 = new double[]{-1.0};
-                        boolean[] var26x = new boolean[]{false};
-                        int[] var27 = new int[]{0};
-                        double var28x = this.resolveRuntimeCursorLayer(var1.getUniqueId(), var15);
-                        this.hudService
+                        var1.addPotionEffect(
+                           new PotionEffect(
+                              PotionEffectType.INVISIBILITY,
+                              Xqedii_1gryrhw.Xqedii_29328aje13k7b(1662451256, 20),
+                              Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-842919424, 18),
+                              (Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1792283379, 2) != 0),
+                              (Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1751951711, 21) != 0)
+                           )
+                        );
+                        this.Xqedii_3q5471n(var1);
+                        if (var17 && this.Xqedii_2seki4b != null) {
+                           this.Xqedii_2seki4b.spawn(var1, var24);
+                        }
+
+                        float var25x = var1.getLocation().getPitch();
+                        if (this.Xqedii_1ilze2o.isFixShadersEnabled(var1)) {
+                           if (Math.abs(var25x) > Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(351633736, 17))) {
+                              Xqedii_38o2zes.Xqedii_1clfsd0(
+                                 var1, var1.getLocation().getYaw(), Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-601808884, 22))
+                              );
+                           }
+
+                           var25x = Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_221q1evxowsxf(736955797, 10));
+                        }
+
+                        this.spectate(var1, var28);
+                        if (var23) {
+                           Xqedii_38o2zes.Xqedii_1clfsd0(
+                              var1,
+                              Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 21)),
+                              Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 24))
+                           );
+                           var25x = Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(53938248, 12));
+                           this.Xqedii_29t98z3(var1, Xqedii_31s8nnd(var32 * Xqedii_1rcrg7y(var18)));
+                        }
+
+                        double[] var10000 = new double[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1666645561, 22)];
+                        var10000[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 30)] = var23
+                           ? Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_3na9xzh18lsvy(3654365793920000134L, 57))
+                           : var2 / Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_26zz0vzoi15yf(4512820408548454691L, 28)) + var6;
+                        double[] var26x = var10000;
+                        var10000 = new double[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(849706401, 31)];
+                        var10000[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 5)] = var23
+                           ? Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-2416318336836756376L, 42))
+                           : (var25x + Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_3na9xzh18lsvy(3620890269059162246L, 53)))
+                                 / Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(5112636822625233123L, 37))
+                                 * var4
+                              + var8;
+                        double[] var27x = var10000;
+                        var10000 = new double[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662418489, 15)];
+                        var10000[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-2071973008, 0)] = Double.longBitsToDouble(
+                           Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(8193993012333793240L, 30)
+                        );
+                        double[] var28x = var10000;
+                        var10000 = new double[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451321, 6)];
+                        var10000[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 30)] = Double.longBitsToDouble(
+                           Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(326720061535534319L, 59)
+                        );
+                        double[] var29x = var10000;
+                        float[] var43 = new float[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1203770644, 12)];
+                        var43[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1257980773, 8)] = var1.getLocation().getYaw();
+                        float[] var30x = var43;
+                        float[] var44 = new float[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-971898675, 26)];
+                        var44[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 15)] = var25x;
+                        float[] var31 = var44;
+                        var10000 = new double[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451225, 5)];
+                        var10000[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(227879917, 26)] = Double.longBitsToDouble(
+                           Xqedii_1gryrhw.Xqedii_3na9xzh18lsvy(-3298897361623801351L, 9)
+                        );
+                        double[] var32x = var10000;
+                        var10000 = new double[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1203770644, 2)];
+                        var10000[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1582127747, 23)] = Double.longBitsToDouble(
+                           Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(-7094270952292689036L, 53)
+                        );
+                        double[] var33 = var10000;
+                        boolean[] var47 = new boolean[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(814745198, 29)];
+                        var47[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 10)] = (Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1473911594, 11) != 0);
+                        boolean[] var34x = var47;
+                        int[] var48 = new int[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1699412802, 0)];
+                        var48[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-1878626800, 5)] = Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(107876496, 13);
+                        int[] var35 = var48;
+                        double var36 = this.Xqedii_mokixov(var1.getUniqueId(), var15);
+                        this.Xqedii_1ilze2o
                            .addHud(
                               var1,
-                              "cursor",
-                              new Vector(var20x[0], var4 / 2.0 + var8, var28x),
-                              new Vector(var24, var24, 2.0),
-                              var28,
+                              Xqedii_1gryrhw.Xqedii_1ls6n5izs316s("zlkGnU9zb6ajNqOqVKIHUqqjNoI3PcAa58LrZn8PlgvQbMmSKliybw=="),
+                              new Vector(
+                                 var26x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-1203617767, 23)],
+                                 var27x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 5)],
+                                 var36
+                              ),
+                              new Vector(var30, var30, Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_3na9xzh18lsvy(3906862042168991878L, 60))),
+                              var34,
                               TextAlignment.CENTER,
                               TextAlignment.CENTER,
-                              false,
-                              255
+                              (Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-158938475, 17) != 0),
+                              Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1210062100, 20)
                            );
-                        this.refreshCursorOpacity(var1);
+                        this.Xqedii_30tju32(var1);
                         this.refreshClientBarrierCube(var1);
-                        PlatformCompat.runEntityTimer(
-                           this.plugin,
+                        int[] var49 = new int[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(2107716261, 15)];
+                        var49[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1582127747, 23)] = Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 1);
+                        int[] var38 = var49;
+                        int[] var50 = new int[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-79534774, 16)];
+                        var50[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 28)] = Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 19);
+                        int[] var39 = var50;
+                        this.Xqedii_3hb6nik(
                            var1,
-                           0L,
-                           1L,
-                           var21xx -> {
-                              if (!var1.isOnline()) {
-                                 this.cleanupCameraRuntime(var1, true);
-                                 var21xx.cancel();
+                           () -> {
+                              if ((184928393 * 184928393 + 184928393 & 1) != 0) {
+                                 throw new IllegalStateException();
+                              } else if (this.isShaderCursorActive(var1)) {
+                                 Location var11 = var1.getLocation();
+                                 float var12xx = var11.getYaw();
+                                 float var13 = var11.getPitch();
+                                 int var14xx = Xqedii_31s8nnd(var32 * Xqedii_1rcrg7y(var18));
+                                 var28x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-158938475, 17)] = Xqedii_95gphhd(
+                                    var28x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 0)],
+                                    Xqedii_1pc3vv6(var12xx - var30x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 27)]),
+                                    var14xx
+                                 );
+                                 var29x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(863011968, 16)] = Xqedii_2okyqdr(var13, var14xx);
+                                 var30x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 1)] = var12xx;
+                                 var31[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 9)] = var13;
+                                 var26x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 8)] = Xqedii_3s259ju(
+                                    var28x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 23)], var14xx
+                                 );
+                                 var27x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 16)] = Xqedii_2atcf61(
+                                    var29x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1347144108, 12)], var14xx
+                                 );
+                                 if (this.Xqedii_2g25cps != null) {
+                                    this.Xqedii_2g25cps
+                                       .onCursor(
+                                          var1,
+                                          var26x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-1039007539, 26)],
+                                          var27x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-896141690, 1)]
+                                       );
+                                 }
+                              }
+                           }
+                        );
+                        Xqedii_38o2zes.Xqedii_j3mggbv(
+                           this.Xqedii_11is6fi,
+                           var1,
+                           Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-1767622970922908019L, 46),
+                           Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(-5700591952616988513L, 23),
+                           var28xx -> {
+                              if ((1981756624 * 1981756624 + 1981756624 & 1) != 0) {
+                                 throw new IllegalStateException();
+                              } else if (!var1.isOnline()) {
+                                 this.Xqedii_2xomr7i(var1, (Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(302042566, 2) != 0));
+                                 var28xx.cancel();
                               } else {
-                                 Integer var22xx = this.cameraRunTokens.get(var1.getUniqueId());
-                                 if (var22xx != null && var22xx == var20) {
-                                    if (!this.cameraStatus.getOrDefault(var1.getUniqueId(), false)) {
-                                       this.cleanupCameraRuntime(var1, true);
-                                       var21xx.cancel();
+                                 Integer var29xx = this.Xqedii_3lrjl61.get(var1.getUniqueId());
+                                 if (var29xx != null && var29xx == var25) {
+                                    if (!this.Xqedii_1npzu61
+                                       .getOrDefault(var1.getUniqueId(), Boolean.valueOf((Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 5) != 0)))) {
+                                       this.Xqedii_2xomr7i(var1, (Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1590516355, 23) != 0));
+                                       var28xx.cancel();
                                     } else {
-                                       Location var23xx = var1.getLocation();
-                                       float var24xx = var23xx.getYaw();
-                                       float var25x = var24xx - var22x[0];
-                                       var22x[0] = var24xx;
-                                       Vector var26xx = this.cursorVisualLocks.get(var1.getUniqueId());
-                                       boolean var27x = var26xx != null;
-                                       if (var25x > 180.0F) {
-                                          var25x -= 360.0F;
-                                       } else if (var25x < -180.0F) {
-                                          var25x += 360.0F;
+                                       if (!var1.isInsideVehicle()) {
+                                          if (var38[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 7)] <= 0) {
+                                             var38[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1779005750, 9)] = Xqedii_1gryrhw.Xqedii_29328aje13k7b(485032389, 31);
+                                             if (var29.isValid() && !var29.isDead() && var28.isValid() && !var28.isDead()) {
+                                                boolean var30xx = var29.addPassenger(var1);
+                                                if (var30xx) {
+                                                   this.spectate(var1, var28);
+                                                   var39[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 1)] = Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(
+                                                      1203770628, 3
+                                                   );
+                                                }
+                                             }
+                                          } else {
+                                             var38[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 2)] -= Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451225, 5);
+                                          }
+                                       } else {
+                                          var38[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(53938248, 12)] = Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 11);
                                        }
 
-                                       if ((double)Math.abs(var25x) > 0.01) {
-                                          var20x[0] += (double)var25x / 360.0 * var2 * var26;
+                                       Location var53 = var1.getLocation();
+                                       double var31x = var32 * Xqedii_1rcrg7y(var18);
+                                       boolean var33x = this.isShaderCursorActive(var1);
+                                       int var34xx = Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 1);
+                                       if (var33x) {
+                                          var34xx = Xqedii_31s8nnd(var31x);
+                                          this.Xqedii_1bh5wam(var1, var34xx);
+                                          this.Xqedii_3siyzd1(var1);
+                                          this.Xqedii_ma0sujh(var1);
+                                          this.Xqedii_qd4x725(var1);
+                                          this.Xqedii_239r2zk(var1, this.Xqedii_f9unzdz(var1), (Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1751951711, 21) != 0));
                                        }
 
-                                       float var28xx = var23xx.getPitch();
-                                       if (var27x) {
-                                          Float var29 = this.cursorVisualLockPitches.get(var1.getUniqueId());
-                                          if (var29 != null && Float.isFinite(var29)) {
-                                             if (Math.abs(var28xx - var29) > 0.01F) {
-                                                var1.setRotation(var24xx, var29);
+                                       float var35x = var53.getYaw();
+                                       float var36x = var35x - var30x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(1726023936, 17)];
+                                       var30x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(863011968, 16)] = var35x;
+                                       Vector var37 = this.Xqedii_28k36d4.get(var1.getUniqueId());
+                                       int var38x = var37 != null
+                                          ? Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1203770644, 8)
+                                          : Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(302042562, 2);
+                                       if (var36x > Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1259334377, 2))) {
+                                          var36x -= Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(923566915, 20));
+                                       } else if (var36x < Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(1751572623, 9))) {
+                                          var36x += Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-68350821, 10));
+                                       }
+
+                                       int var39x = var39[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-896141690, 1)] > 0
+                                          ? Xqedii_1gryrhw.Xqedii_29328aje13k7b(-588709433, 30)
+                                          : Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 23);
+                                       if (var39x != 0) {
+                                          var39[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-519503770, 25)] -= Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-971898675, 26);
+                                       }
+
+                                       if (!var33x
+                                          && var39x == 0
+                                          && Math.abs(var36x) > Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_3na9xzh18lsvy(-2759887522923520361L, 18))) {
+                                          var26x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-842919424, 18)] += var36x
+                                             / Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(7009086572999860433L, 8))
+                                             * var2
+                                             * var31x;
+                                       }
+
+                                       float var40x = var53.getPitch();
+                                       if (var38x != 0) {
+                                          Float var41x = this.Xqedii_2ebsa64.get(var1.getUniqueId());
+                                          if (var41x != null && Float.isFinite(var41x)) {
+                                             if (Math.abs(var40x - var41x) > Float.intBitsToFloat(Xqedii_1gryrhw.Xqedii_29328aje13k7b(-855105665, 27))) {
+                                                Xqedii_38o2zes.Xqedii_1clfsd0(var1, var35x, var41x);
                                              }
 
-                                             var28xx = var29;
+                                             var40x = var41x;
                                           }
                                        }
 
-                                       float var38 = var28xx - var23x[0];
-                                       var23x[0] = var28xx;
-                                       if (!var27x && (double)Math.abs(var38) > 0.01) {
-                                          var21x[0] += (double)var38 / 180.0 * var4 * var26;
+                                       float var54 = var40x - var31[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 6)];
+                                       var31[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-2033543690, 25)] = var40x;
+                                       if (!var33x
+                                          && var39x == 0
+                                          && var38x == 0
+                                          && Math.abs(var54) > Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_26zz0vzoi15yf(274826880268961321L, 25))) {
+                                          var27x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(1208170248, 4)] += var54
+                                             / Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-3333526812771079624L, 35))
+                                             * var4
+                                             * var31x;
                                        }
 
-                                       if (!var27x && var26x[0]) {
-                                          double var30 = var24x[0];
-                                          if (!Double.isFinite(var30) || var30 < 0.0) {
-                                             var30 = var20x[0];
+                                       if (!var33x && var38x == 0 && var34x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-896141690, 1)]) {
+                                          double var42x = var32x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(923289603, 20)];
+                                          if (!Double.isFinite(var42x)
+                                             || var42x < Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_3na9xzh18lsvy(3618631666017280134L, 30))) {
+                                             var42x = var26x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 19)];
                                           }
 
-                                          var20x[0] = var30;
-                                          double var32 = var25[0];
-                                          if (Double.isFinite(var32)) {
-                                             var21x[0] = var32;
-                                          }
-                                       }
-
-                                       if (!var27x) {
-                                          if (var20x[0] < 0.0) {
-                                             var20x[0] = 0.0;
-                                          } else if (var20x[0] > var2) {
-                                             var20x[0] = var2;
-                                          }
-
-                                          double var40 = var4 + var8;
-                                          if (var21x[0] < var8) {
-                                             var21x[0] = var8;
-                                          } else if (var21x[0] > var40) {
-                                             var21x[0] = var40;
+                                          var26x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 11)] = var42x;
+                                          double var44x = var33[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 3)];
+                                          if (Double.isFinite(var44x)) {
+                                             var27x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(923289603, 20)] = var44x;
                                           }
                                        }
 
-                                       double var39 = var26xx == null ? var20x[0] : var26xx.getX();
-                                       double var41 = var26xx == null ? var21x[0] : var26xx.getY();
-                                       boolean var34 = Math.abs(var39 - var24x[0]) > 0.005 || Math.abs(var41 - var25[0]) > 0.005;
-                                       if (var34) {
-                                          Entity var35 = this.hudService.getHud(var1, "cursor");
-                                          if (var35 != null) {
-                                             double var36 = this.resolveRuntimeCursorLayer(var1.getUniqueId(), var15);
-                                             this.hudService
-                                                .moveHud(
-                                                   var35,
-                                                   new Vector(var39, var41, var36),
-                                                   this.resolveEditorCursorInterpolationDurationTicks(),
-                                                   this.resolveEditorCursorTeleportDurationTicks()
-                                                );
+                                       if (var33x) {
+                                          if (var39x == 0) {
+                                             var28x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 9)] = Xqedii_95gphhd(
+                                                var28x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1518493262, 7)], var36x, var34xx
+                                             );
                                           }
 
-                                          var24x[0] = var39;
-                                          var25[0] = var41;
+                                          var29x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 15)] = Xqedii_2okyqdr(var40x, var34xx);
+                                          if (this.Xqedii_wnk0odx(
+                                             var1,
+                                             var35x,
+                                             var40x,
+                                             var28x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(53938248, 12)],
+                                             var29x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 5)]
+                                          )) {
+                                             var30x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-519503770, 25)] = Xqedii_1pc3vv6(
+                                                (float)var28x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 24)]
+                                             );
+                                             var31[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 7)] = (float)var29x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(
+                                                431505984, 15
+                                             )];
+                                          }
+
+                                          var26x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-317876949, 18)] = Xqedii_3s259ju(
+                                             var28x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 16)], var34xx
+                                          );
+                                          var27x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 24)] = Xqedii_2atcf61(
+                                             var29x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-791063874, 22)], var34xx
+                                          );
+                                       } else if (var38x == 0) {
+                                          if (var26x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1271507793, 20)]
+                                             < Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(870309754973081290L, 4))) {
+                                             var26x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(13484562, 10)] = Double.longBitsToDouble(
+                                                Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-2416319444896375704L, 42)
+                                             );
+                                          } else if (var26x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 13)] > var2) {
+                                             var26x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 25)] = var2;
+                                          }
+
+                                          double var56 = var4 + var8;
+                                          if (var27x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 19)] < var8) {
+                                             var27x[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1420801078, 4)] = var8;
+                                          } else if (var27x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 7)] > var56) {
+                                             var27x[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 27)] = var56;
+                                          }
                                        }
 
-                                       if (this.cursorListener != null) {
-                                          boolean var42 = var27x != var26x[0];
-                                          boolean var43 = var34 || var42 || var27x;
-                                          if (!var43) {
-                                             var27[0]++;
-                                             var43 = var27[0] >= 2;
+                                       double var55 = var37 == null ? var26x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-1039007539, 26)] : var37.getX();
+                                       double var57 = var37 == null ? var27x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 22)] : var37.getY();
+                                       int var46x = !(
+                                                Math.abs(var55 - var32x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(1726023936, 17)])
+                                                   > Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2o14tfl1vqtc9(-8699585914787406559L, 31))
+                                             )
+                                             && !(
+                                                Math.abs(var57 - var33[Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-317876949, 18)])
+                                                   > Double.longBitsToDouble(Xqedii_1gryrhw.Xqedii_2a8penmzb3osa(-8142902342440292679L, 10))
+                                             )
+                                          ? Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 27)
+                                          : Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1203770644, 20);
+                                       if (var46x != 0) {
+                                          Entity var47x = this.Xqedii_1ilze2o
+                                             .getHud(var1, Xqedii_1gryrhw.Xqedii_1ls6n5izs316s("zlkGnU9zb6ajNqOqVKIHUqqjNoI3PcAa58LrZn8PlgvQbMmSKliybw=="));
+                                          if (var47x != null) {
+                                             double var48x = this.Xqedii_mokixov(var1.getUniqueId(), var15);
+                                             this.Xqedii_1ilze2o
+                                                .moveHud(var47x, new Vector(var55, var57, var48x), this.Xqedii_139042g(), this.Xqedii_2jfx1cj());
                                           }
 
-                                          if (var43) {
-                                             this.cursorListener.onCursor(var1, var20x[0], var21x[0]);
-                                             var27[0] = 0;
+                                          var32x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(1075427394, 7)] = var55;
+                                          var33[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 20)] = var57;
+                                       }
+
+                                       if (this.Xqedii_2g25cps != null) {
+                                          int var58 = (var38x != 0) != var34x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 23)]
+                                             ? Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662516793, 16)
+                                             : Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(151021281, 1);
+                                          int var59 = var46x == 0 && var58 == 0 && var38x == 0
+                                             ? Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 18)
+                                             : Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(1203770644, 12);
+                                          if (var59 == 0) {
+                                             var35[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 14)] += Xqedii_1gryrhw.Xqedii_221q1evxowsxf(1600670889, 13);
+                                             var59 = var35[Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1662451257, 9)]
+                                                   >= Xqedii_1gryrhw.Xqedii_29328aje13k7b(-1666645561, 21)
+                                                ? Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-79534774, 16)
+                                                : Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1779005750, 9);
+                                          }
+
+                                          if (var59 != 0) {
+                                             double var49x = var38x != 0 ? var26x[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-2078015077, 27)] : var55;
+                                             double var51 = var38x != 0 ? var27x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 7)] : var57;
+                                             this.Xqedii_2g25cps.onCursor(var1, var49x, var51);
+                                             var35[Xqedii_1gryrhw.Xqedii_259ldjk2o2pse(-842919424, 18)] = Xqedii_1gryrhw.Xqedii_221q1evxowsxf(-1518493262, 7);
                                           }
                                        }
 
-                                       var26x[0] = var27x;
+                                       var34x[Xqedii_1gryrhw.Xqedii_2gjb9flxeaah1(-1203770645, 25)] = (var38x != 0);
                                     }
                                  } else {
-                                    var21xx.cancel();
+                                    var28xx.cancel();
                                  }
                               }
                            }
@@ -420,294 +556,8 @@ public class CameraService {
                   }
                }
             },
-            1L
+            Xqedii_1gryrhw.Xqedii_26zz0vzoi15yf(-4512820408481345828L, 37)
          );
       }
-   }
-
-   private int resolveEditorCursorInterpolationDurationTicks() {
-      return 1;
-   }
-
-   public void suppressStoneBreakAndHitSounds(Player var1) {
-      if (var1 != null) {
-         var1.stopSound(Sound.BLOCK_STONE_BREAK, SoundCategory.BLOCKS);
-         var1.stopSound(Sound.BLOCK_STONE_HIT, SoundCategory.BLOCKS);
-      }
-   }
-
-   public void refreshClientBarrierCube(Player var1) {
-      if (var1 != null && var1.isOnline()) {
-         if (this.cameraStatus.getOrDefault(var1.getUniqueId(), false)) {
-            this.updateClientBarrierCube(var1, var1.getLocation(), true);
-         }
-      }
-   }
-
-   private double resolveRuntimeCursorLayer(UUID var1, double var2) {
-      if (var1 == null) {
-         return var2;
-      } else {
-         Double var4 = this.cameraCursorLayers.get(var1);
-         return var4 != null && Double.isFinite(var4) ? var4 : var2;
-      }
-   }
-
-   private double resolveEditorCursorMovementSpeed(double var1) {
-      return Double.isFinite(var1) && var1 > 0.0 ? var1 : 1.0;
-   }
-
-   private int resolveEditorCursorTeleportDurationTicks() {
-      return this.resolveEditorCursorInterpolationDurationTicks();
-   }
-
-   private void refreshCursorOpacity(Player var1) {
-      Entity var2 = this.hudService.getHud(var1, "cursor");
-      if (var2 != null) {
-         int var3 = Math.max(0, Math.min(255, this.hudService.getHudOpacity(var2)));
-         int var4 = var3 >= 255 ? 254 : Math.min(255, var3 + 1);
-         if (var4 != var3) {
-            this.hudService.setOpacity(var2, var4);
-            PlatformCompat.runEntityTaskLater(this.plugin, var1, () -> {
-               if (var1.isOnline() && this.cameraStatus.getOrDefault(var1.getUniqueId(), false)) {
-                  Entity var3x = this.hudService.getHud(var1, "cursor");
-                  if (var3x != null) {
-                     this.hudService.setOpacity(var3x, var3);
-                  }
-               }
-            }, 1L);
-         }
-      }
-   }
-
-   private void trackCameraEntity(Player var1, Entity var2) {
-      if (var1 != null && var2 != null) {
-         this.cameraInternalEntityIds.computeIfAbsent(var1.getUniqueId(), var0 -> new HashSet<>()).add(var2.getUniqueId());
-      }
-   }
-
-   private void removeTrackedCameraEntities(Player var1) {
-      if (var1 != null) {
-         Set var2 = this.cameraInternalEntityIds.remove(var1.getUniqueId());
-         if (var2 != null && !var2.isEmpty()) {
-            for (UUID var4 : (Set<UUID>)(Set)var2) {
-               Entity var5 = Bukkit.getEntity(var4);
-               if (var5 != null && var5.isValid() && !var5.isDead()) {
-                  var5.remove();
-               }
-            }
-         }
-      }
-   }
-
-   private void cleanupCameraRuntime(Player var1, boolean var2) {
-      if (var1 != null) {
-         UUID var3 = var1.getUniqueId();
-         this.cameraRunTokens.merge(var3, 1, Integer::sum);
-         this.cameraStatus.put(var3, false);
-         if (var1.isInsideVehicle()) {
-            var1.leaveVehicle();
-         }
-
-         this.removeTrackedCameraEntities(var1);
-         Entity var4 = this.hudService.getHud(var1, "cursor");
-         if (var4 != null) {
-            this.hudService.removeHudX(Collections.singletonList(var4), false);
-         }
-
-         this.cursorVisualLocks.remove(var3);
-         this.cursorVisualLockPitches.remove(var3);
-         this.cameraCursorLayers.remove(var3);
-         this.cameraBaseLocations.remove(var3);
-         if (var1.isOnline()) {
-            this.clearClientBarrierCube(var1);
-            var1.removePotionEffect(PotionEffectType.INVISIBILITY);
-            if (var2) {
-               this.spectate(var1, null);
-            }
-         } else {
-            this.clientBarrierBlocks.remove(var3);
-            this.clientBarrierCenters.remove(var3);
-         }
-      }
-   }
-
-   private Location resolveCameraBaseLocation(Player var1) {
-      UUID var2 = var1.getUniqueId();
-      Location var3 = this.cameraBaseLocations.get(var2);
-      if (var3 != null && var3.getWorld() != null && var3.getWorld().equals(var1.getWorld())) {
-         return var3.clone();
-      } else {
-         Location var4 = var1.getLocation().clone();
-         Entity var5 = var1.getVehicle();
-         if (var5 != null && var5.hasMetadata("xqgui_internal_camera")) {
-            double var6 = 0.0;
-            double var8 = 0.0;
-            return var4.subtract(0.0, var6, var8);
-         } else {
-            return var4;
-         }
-      }
-   }
-
-   private Location resolveNearbySafeCameraBaseLocation(Player var1, Location var2) {
-      if (var1 != null && var2 != null) {
-         World var3 = var2.getWorld();
-         if (var3 == null) {
-            return var2;
-         } else if (this.isCameraSpawnSpaceOpen(var3, var2.getBlockX(), var2.getBlockY(), var2.getBlockZ())) {
-            return var2.clone();
-         } else {
-            double var4 = Math.toRadians((double)var2.getYaw());
-            Vector var6 = new Vector(-Math.sin(var4), 0.0, Math.cos(var4));
-            if (var6.lengthSquared() < 1.0E-4) {
-               var6 = new Vector(0.0, 0.0, 1.0);
-            } else {
-               var6.normalize();
-            }
-
-            Vector var7 = new Vector(var6.getZ(), 0.0, -var6.getX());
-            Vector var8 = var7.clone().multiply(-1.0);
-            Vector var9 = var6.clone().multiply(-1.0);
-            List<Vector> var10 = List.of(var8, var7, var6, var9, var6.clone().add(var8), var6.clone().add(var7), var9.clone().add(var8), var9.clone().add(var7));
-            double[] var11 = new double[]{2.0, 3.0};
-
-            for (Object var15_raw : var11) {
-               double var15 = ((Number)var15_raw).doubleValue();
-               for (Vector var18 : var10) {
-                  Vector var19 = var18.clone();
-                  if (!(var19.lengthSquared() < 1.0E-4)) {
-                     var19.normalize().multiply(var15);
-                     Location var20 = this.resolveSafeCameraCandidate(var3, var2, var19.getX(), var19.getZ());
-                     if (var20 != null) {
-                        return var20;
-                     }
-                  }
-               }
-            }
-
-            return var2;
-         }
-      } else {
-         return var2;
-      }
-   }
-
-   private Location resolveSafeCameraCandidate(World var1, Location var2, double var3, double var5) {
-      if (var1 != null && var2 != null) {
-         int var7 = (int)Math.floor(var2.getX() + var3);
-         int var8 = (int)Math.floor(var2.getZ() + var5);
-         int var9 = var2.getBlockY();
-         int var10 = var1.getMinHeight();
-         int var11 = var1.getMaxHeight() - 1;
-         int[] var12 = new int[]{0, 1, -1, 2, -2};
-
-         for (Object var16_raw : var12) {
-            int var16 = ((Number)var16_raw).intValue();
-            int var17 = var9 + var16;
-            if (var17 >= var10 && var17 + 1 <= var11 && this.isCameraSpawnSpaceOpen(var1, var7, var17, var8)) {
-               return new Location(var1, (double)var7 + 0.5, (double)var17, (double)var8 + 0.5, var2.getYaw(), var2.getPitch());
-            }
-         }
-
-         return null;
-      } else {
-         return null;
-      }
-   }
-
-   private boolean isCameraSpawnSpaceOpen(World var1, int var2, int var3, int var4) {
-      return var1 == null ? false : !var1.getBlockAt(var2, var3, var4).getType().isSolid() && !var1.getBlockAt(var2, var3 + 1, var4).getType().isSolid();
-   }
-
-   private void updateClientBarrierCube(Player var1, Location var2, boolean var3) {
-      if (var1 != null && var2 != null) {
-         World var4 = var1.getWorld();
-         UUID var5 = var1.getUniqueId();
-         int var6 = var2.getBlockX();
-         int var7 = var2.getBlockY();
-         int var8 = (int)Math.round(0.0);
-         int var9 = var2.getBlockZ() - var8;
-         CameraService.BlockPos var10 = new CameraService.BlockPos(var6, var7, var9);
-         CameraService.BlockPos var11 = this.clientBarrierCenters.get(var5);
-         if (var3 || !var10.equals(var11)) {
-            this.clientBarrierCenters.put(var5, var10);
-            Set<CameraService.BlockPos> var12 = this.clientBarrierBlocks.computeIfAbsent(var5, var0 -> new HashSet<>());
-            HashSet var13 = new HashSet();
-
-            for (int var14 = -2; var14 <= 2; var14++) {
-               for (int var15 = -2; var15 <= 2; var15++) {
-                  for (int var16 = -2; var16 <= 2; var16++) {
-                     int var17 = var6 + var14;
-                     int var18 = var7 + var15;
-                     int var19 = var9 + var16;
-                     if (var4.getBlockAt(var17, var18, var19).getType().isAir()) {
-                        CameraService.BlockPos var20 = new CameraService.BlockPos(var17, var18, var19);
-                        var13.add(var20);
-                        if (var3 || !var12.contains(var20)) {
-                           var1.sendBlockChange(new Location(var4, (double)var17, (double)var18, (double)var19), CLIENT_BARRIER_DATA);
-                        }
-                     }
-                  }
-               }
-            }
-
-            for (CameraService.BlockPos var22 : var12) {
-               if (!var13.contains(var22)) {
-                  var1.sendBlockChange(
-                     new Location(var4, (double)var22.x, (double)var22.y, (double)var22.z), var4.getBlockAt(var22.x, var22.y, var22.z).getBlockData()
-                  );
-               }
-            }
-
-            var12.clear();
-            var12.addAll(var13);
-         }
-      }
-   }
-
-   private void clearClientBarrierCube(Player var1) {
-      UUID var2 = var1.getUniqueId();
-      this.clientBarrierCenters.remove(var2);
-      Set<CameraService.BlockPos> var3 = this.clientBarrierBlocks.remove(var2);
-      if (var3 != null && !var3.isEmpty()) {
-         World var4 = var1.getWorld();
-
-         for (CameraService.BlockPos var6 : var3) {
-            var1.sendBlockChange(new Location(var4, (double)var6.x, (double)var6.y, (double)var6.z), var4.getBlockAt(var6.x, var6.y, var6.z).getBlockData());
-         }
-      }
-   }
-
-   private static final class BlockPos {
-      private final int x;
-      private final int y;
-      private final int z;
-
-      private BlockPos(int var1, int var2, int var3) {
-         this.x = var1;
-         this.y = var2;
-         this.z = var3;
-      }
-
-      @Override
-      public boolean equals(Object var1) {
-         if (this == var1) {
-            return true;
-         } else {
-            return !(var1 instanceof CameraService.BlockPos var2) ? false : this.x == var2.x && this.y == var2.y && this.z == var2.z;
-         }
-      }
-
-      @Override
-      public int hashCode() {
-         int var1 = Integer.hashCode(this.x);
-         var1 = 31 * var1 + Integer.hashCode(this.y);
-         return 31 * var1 + Integer.hashCode(this.z);
-      }
-   }
-
-   public interface CursorListener {
-      void onCursor(Player var1, double var2, double var4);
    }
 }

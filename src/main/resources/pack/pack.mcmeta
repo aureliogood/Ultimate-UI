@@ -2,14 +2,28 @@
   "pack": {
     "description": "§6§lUltimate UI §7- §eResource Pack",
     "pack_format": 55,
-    "supported_formats": [0, 9999]
+    "supported_formats": [0, 9999],
+    "min_format": 0,
+    "max_format": 9999
   },
   "overlays": {
     "entries": [
       {
-        "formats": [80, 999],
-        "min_format": 80,
+        "formats": [97, 999],
+        "min_format": 97,
         "max_format": 999,
+        "directory": "uui_26_3"
+      },
+      {
+        "formats": [88, 96],
+        "min_format": 88,
+        "max_format": 96,
+        "directory": "uui_26_2"
+      },
+      {
+        "formats": [80, 87],
+        "min_format": 80,
+        "max_format": 87,
         "directory": "uui_26_1"
       },
       {
@@ -25,16 +39,34 @@
         "directory": "uui_1_21_5"
       },
       {
+        "formats": [42, 45],
+        "min_format": 42,
+        "max_format": 45,
+        "directory": "uui_1_21_2"
+      },
+      {
         "formats": [42, 46],
         "min_format": 42,
         "max_format": 46,
         "directory": "uui_1_21_4"
       },
       {
-        "formats": [32, 34],
-        "min_format": 32,
+        "formats": [33, 34],
+        "min_format": 33,
         "max_format": 34,
         "directory": "uui_1_21_1"
+      },
+      {
+        "formats": [32, 32],
+        "min_format": 32,
+        "max_format": 32,
+        "directory": "uui_1_20_5"
+      },
+      {
+        "formats": [22, 22],
+        "min_format": 22,
+        "max_format": 22,
+        "directory": "uui_1_20_4"
       }
     ]
   }

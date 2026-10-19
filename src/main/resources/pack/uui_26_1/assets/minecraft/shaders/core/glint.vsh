@@ -27,7 +27,7 @@ void main() {
     texCoord0 = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;
 
     if (make_hud()) {
-        sphericalVertexDistance = 0.0;
-        cylindricalVertexDistance = 0.0;
+        sphericalVertexDistance = -1.0e6;
+        cylindricalVertexDistance = -1.0e6;
     }
 }

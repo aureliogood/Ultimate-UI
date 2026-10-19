@@ -52,6 +52,9 @@ blocks:
           width: 847
           height: 2
         unicode: 
+        
+        
+        
       - type: text
         layer: 9607.0
         opacity: 255
@@ -131,6 +134,11 @@ blocks:
           width: 847-2*27
           height: 2
         unicode: 
+        
+        
+
+        
+        
       - type: text
         layer: 9607.0
         opacity: 255
@@ -169,6 +177,7 @@ blocks:
             size:
               width: 200
               height: 50
+                
             unicode: 
             children:
               - type: hitbox
@@ -210,6 +219,10 @@ blocks:
           width: 847-2*27
           height: 2
         unicode: 
+        
+        
+
+        
       - type: text
         layer: 9607.0
         opacity: 255
@@ -289,6 +302,12 @@ blocks:
           width: 847-2*27
           height: 2
         unicode: 
+        
+
+
+
+
+        
       - type: text
         layer: 9607.0
         opacity: 255
@@ -368,6 +387,21 @@ blocks:
           width: 847-2*27
           height: 2
         unicode: 
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       - type: block
         layer: 9608.0
         opacity: 255
@@ -380,6 +414,7 @@ blocks:
           width: 847
           height: 2
         unicode: 
+        
       - type: block
         id: popup_preferences_cancel
         layer: 9608.0
@@ -406,6 +441,8 @@ blocks:
           width: 103
           height: 41
         unicode: 
+        
+
       - type: block
         id: popup_preferences_confirm
         layer: 9608.0

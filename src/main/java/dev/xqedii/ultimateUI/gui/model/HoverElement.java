@@ -1,9 +1,12 @@
 package dev.xqedii.ultimateUI.gui.model;
 
+import dev.xqedii.ultimateUI.Xqedii_28q28hp;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.TextDisplay.TextAlignment;
 import org.bukkit.util.Vector;
 
 public class HoverElement {
+   public static final String Xqedii_1vo4v4yo3bjc1 = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
    public String id;
    public String type;
    public String targetId;
@@ -27,13 +30,28 @@ public class HoverElement {
    public boolean mirrorY;
    public boolean itemDisplay;
    public boolean itemDisplayBlock;
-   public boolean visible = true;
+   public boolean playerHeadText;
+   public String skinOwner;
+   public boolean skinSlim;
+   public double[] skinPartRotations;
+   public boolean skinSpinning;
+   public double skinSpinSpeedTicks;
+   public boolean skinSpinMouse;
+   public boolean skinSpinUpDown;
+   public double skinSpinAngle;
+   public double skinSpinPitch;
+   public boolean skinSpinUnlimited;
+   public double skinSpinVelocityYaw;
+   public double skinSpinVelocityPitch;
+   public int skinSpinMomentumTicks;
+   public boolean visible = (Xqedii_28q28hp.Xqedii_2ewkzj79qhqgi(-1542183376, 1) != 0);
    public int opacity;
    public String text;
    public String hoverText;
    public double outlineSize;
    public String outlineColor;
    public String outlineText;
+   public double outlineLayer = Double.longBitsToDouble(Xqedii_28q28hp.Xqedii_3uptc4rsfjn9g(-5792589770889344801L, 60));
    public String onClickAction;
    public String onLeftClickAction;
    public String onRightClickAction;
@@ -42,6 +60,10 @@ public class HoverElement {
    public Vector baseLocation;
    public Vector baseScale;
    public String roundedCornerUnicode;
+   public double roundedRadius = Double.longBitsToDouble(Xqedii_28q28hp.Xqedii_1wfu8m2hiq4as(-1370711722996222138L, 51));
+   public boolean roundedShape;
+   public int scrollClip;
+   public double[] scrollClipSpec;
    public String roundedCornerUnicodeTopLeft;
    public String roundedCornerUnicodeTopRight;
    public String roundedCornerUnicodeBottomRight;
@@ -59,4 +81,6 @@ public class HoverElement {
    public double hitboxOffsetX;
    public double hitboxOffsetY;
    public boolean disableHitbox;
+   public ConfigurationSection inputSection;
+   public int inputTextOpacity = Xqedii_28q28hp.Xqedii_2ewkzj79qhqgi(1094876362, 5);
 }

@@ -1,6 +1,9 @@
 package dev.xqedii.ultimateUI.service.gui.model;
 
+import dev.xqedii.ultimateUI.Xqedii_1jrxgxk;
+
 public final class PreviewViewport {
+   public static final String Xqedii_3ajsz2arvwk6f = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
    public final double previewX;
    public final double previewY;
    public final double previewWidth;
@@ -9,7 +12,7 @@ public final class PreviewViewport {
    public final double pageHeight;
    public final double baseScale;
    public final double layerBase;
-   public double zoom = 1.0;
+   public double zoom = Double.longBitsToDouble(Xqedii_1jrxgxk.Xqedii_x8jwnwurqmkv(-5750928548047054403L, 53));
    public double panX;
    public double panY;
 

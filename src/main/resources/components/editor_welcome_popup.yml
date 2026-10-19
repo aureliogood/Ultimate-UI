@@ -41,6 +41,8 @@ blocks:
           width: 128
           height: 128
         text: <font:poppins_semibold><#ffffff>Hello %player%!
+        
+
       - type: text
         layer: 9607.0
         opacity: 255
@@ -103,6 +105,21 @@ blocks:
           width: 847
           height: 2
         unicode: 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       - type: block
         layer: 9608.0
         opacity: 255
@@ -115,6 +132,7 @@ blocks:
           width: 847
           height: 2
         unicode: 
+        
       - type: hitbox
         id: popup_welcome_link_hitbox
         layer: 9660.0
@@ -128,6 +146,7 @@ blocks:
           width: 305
           height: 18
         unicode: 
+
       - type: block
         id: popup_welcome_confirm
         layer: 9608.0

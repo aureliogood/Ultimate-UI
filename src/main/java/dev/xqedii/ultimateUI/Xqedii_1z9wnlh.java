@@ -1,0 +1,20 @@
+package dev.xqedii.ultimateUI;
+
+public final class Xqedii_1z9wnlh extends Xqedii_ev3jp8w {
+   public static final String Xqedii_3j7gudlg78p98 = "\n//\n// well well well, Hello!\n// Contact: https://xqedii.dev/dc\n//\n";
+   public final Object Xqedii_2azibg0;
+
+   public Xqedii_1z9wnlh(Object var1, int var2) {
+      super(var2);
+      this.Xqedii_2azibg0 = var1;
+   }
+
+   @Override
+   public Object Xqedii_28g36j3(Xqedii_y5pr2ec var1) {
+      if (((1765151144 | 1) & 1) == 0) {
+         throw new IllegalStateException();
+      } else {
+         return this.Xqedii_2azibg0;
+      }
+   }
+}

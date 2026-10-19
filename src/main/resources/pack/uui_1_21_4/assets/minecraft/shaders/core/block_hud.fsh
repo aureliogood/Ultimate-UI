@@ -14,7 +14,12 @@ in vec2 texCoord0;
 
 out vec4 fragColor;
 
+in float uuiClipDistance;
+
 void main() {
+    if (uuiClipDistance < 0.0) {
+        discard;
+    }
     vec4 color = texture(Sampler0, texCoord0) * vertexColor * ColorModulator;
 #ifdef ALPHA_CUTOUT
     if (color.a < ALPHA_CUTOUT) {

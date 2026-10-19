@@ -1,9 +1,9 @@
 resource-pack:
   messages:
     chat:
-      loading: "<#dedb24>Resource pack is loading!"
-      success: "<#42f032>Resource pack loaded successfully!"
-      failed: "<#f04f32>Resource pack was not loaded correctly!"
+      loading: "<#8dfc00>Loading the resource pack..."
+      success: "<#8bf800>✔ <#b8fb62>The resource pack has been loaded!"
+      failed: "&cThe resource pack could not be loaded!"
     title:
       title: "<#dedb24><bold>Resource pack is loading!"
       subtitle: "<#80fbc6>Your resource pack will be loaded soon..."
@@ -26,7 +26,9 @@ resource-pack:
       - "&e/                    "
       - "&e|                     "
       - "&e\\/                     "
+
 gui:
-  no-perm: "&cYou don't have permission {PERMISSION}"
+  no-perm: "&cYou don't have permission <#ff9391>{PERMISSION}&c!"
   cant-do-this: "&cYou can't do this!"
-  limit-reached: "&cReached page limit!"
+  limit-reached: "&cThis page has reached the element limit!"
+  editor-not-on-bedrock: "&cThe editor is not available on Bedrock!"

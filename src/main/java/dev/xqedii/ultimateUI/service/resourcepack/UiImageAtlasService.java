@@ -1,4 +1,5 @@
 package dev.xqedii.ultimateUI.service.resourcepack;
+import dev.xqedii.ultimateUI.service.resourcepack.UiImageAtlasService;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
