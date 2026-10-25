@@ -63,14 +63,17 @@ public abstract class UiCommandRegistry extends UiOpenClose {
                   String var10000 = this.firstNonBlank(var10001);
                   String[] var10002 = new String[Xqedii_27qfk48.Xqedii_mkcbeiln176k(-1265463065, 30)];
                   var10002[Xqedii_27qfk48.Xqedii_inj5wb5xpz73(-1041536156, 14)] = var7.getPermission();
-                  if (Objects.equals(var10000, this.firstNonBlank(var10002))) {
-                     continue;
+                  if (!Objects.equals(var10000, this.firstNonBlank(var10002))) {
+                     var7.setPermission(var10000);
                   }
+
+                  continue;
                }
 
-               this.unregisterUiCommand(var1, var7);
-               var4.remove();
-               var3 = Xqedii_27qfk48.Xqedii_inj5wb5xpz73(1041536155, 18);
+               // Evita mutar el arbol de comandos de Brigadier durante /uui reload: Paper 1.21.11
+               // reconstruye ese arbol de forma asincrona y lanza ConcurrentModificationException.
+               // El comando eliminado se limpia al deshabilitar el plugin o al reiniciar el servidor.
+               continue;
             }
 
             for (Entry var12 : (Iterable<Entry>) (var2.entrySet())) {

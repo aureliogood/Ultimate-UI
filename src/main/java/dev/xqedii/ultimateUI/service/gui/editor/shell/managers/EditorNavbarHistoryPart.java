@@ -1037,7 +1037,8 @@ extends GuiServiceEditorSidebarSupport {
             this.updateWelcomePopupActionIcons(player, editorSession, d, d2);
             return;
         }
-        if (this.isInsideShellBlock(editorSession, Xqedii_1as73k7.Xqedii_3sg3wlcdsipy0("4tgz/z7PL1Du4zbXN+lKMoTT7gFjjZpFTMJPMwYuMxuoJm52FAg730iqy6D49zcqGO5hHF6JURh4lj+P0mztfChPk5d06XP+1FWZ+wpT6genGe6w"), d, d2) && this.handleWelcomePopupConfirm(player, editorSession)) {
+        boolean bl = this.isInsideShellBlock(editorSession, "popup_welcome_confirm_hitbox", d, d2);
+        if (bl && this.handleWelcomePopupConfirm(player, editorSession)) {
             this.setWelcomePopupVisible(player, editorSession, Xqedii_1as73k7.Xqedii_1nc45iibavbym(-2004899661, 8) != 0);
             this.playWelcomePopupSound(player, editorSession, Xqedii_1as73k7.Xqedii_3sg3wlcdsipy0("q8aeGAX770wk0C1hdf89XK84Kp2Ck04SD13ccndDzkv9/umC7tXjQInAE7fKLjmNf3u7FtJhA5W4Wrc/Bfg="));
             return;

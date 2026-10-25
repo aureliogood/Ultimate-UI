@@ -551,6 +551,28 @@ public abstract class EditorRuntimeFilePart extends EditorImageDragPart {
             }
          }
 
+         // Runtime cursor offsets are configurable and can differ between shader and
+         // legacy cursor modes. If the calibrated point misses, try the actual cursor
+         // position as a fallback so a stale/incorrect offset cannot make every
+         // runtime image and button impossible to click.
+         if (var6 == null && !var1.editMode && (var1.hitboxOffsetX != 0.0 || var1.hitboxOffsetY != 0.0)) {
+            double var18 = var1.cursorX;
+            double var20 = var1.cursorY;
+            for (HoverElement var22 : var1.elements) {
+               if (var22 != null && var22.baseLocation != null && !var22.disableHitbox) {
+                  EditorRect var23 = this.getHoverBounds(var1, var22);
+                  if (var23 != null
+                     && var18 >= var23.x
+                     && var18 <= var23.maxX()
+                     && var20 >= var23.y
+                     && var20 <= var23.maxY()
+                     && (var6 == null || var22.runtimeZ >= var6.runtimeZ)) {
+                     var6 = var22;
+                  }
+               }
+            }
+         }
+
          return var6;
       } else {
          return null;

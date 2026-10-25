@@ -1114,8 +1114,12 @@ public abstract class EditorPopupPagePart extends EditorRuntimeFilePart {
 
          if (!this.equalsNullable(var2.cursorRuntimeUnicode, var8)) {
             var2.cursorRuntimeUnicode = var8;
-            this.applyCursorVisualUnicode(var1, var2, var8);
          }
+
+         // The cursor HUD may not exist on the first refresh after opening the editor.
+         // Retry applying the visual on later pointer updates; applyCursorVisualUnicode
+         // already avoids sending an update when the displayed text is unchanged.
+         this.applyCursorVisualUnicode(var1, var2, var8);
       }
    }
 
